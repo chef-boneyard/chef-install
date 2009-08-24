@@ -1,0 +1,17 @@
+--- 
+abstract: "Install Chef, and connect to a Chef Server, from any system "
+author: Adam Jacob <adam@opscode.com>
+build_requires: 
+  Test::More: 0
+distribution_type: module
+generated_by: Module::Install version 0.650
+license: perl
+meta-spec: 
+  url: http://module-build.sourceforge.net/META-spec-v1.3.html
+  version: 1.3
+name: Chef-Install
+no_index: 
+  directory: 
+    - inc
+    - t
+version: 0.01
