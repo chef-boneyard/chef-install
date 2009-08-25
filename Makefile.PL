@@ -7,6 +7,8 @@ license  'perl';
 
 build_requires 'Test::More';
 
+install_script "bin/chef-install";
+
 auto_install;
 
 WriteAll;

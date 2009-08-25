@@ -58,6 +58,12 @@ sub install_chef_client {
   Chef::Install::Utils->chef_from_gems;
 }
 
+sub bootstrap_client {
+  Chef::Install::Utils->render_chef_solo_json;
+  Chef::Install::Utils->render_chef_solo_rb;
+  Chef::Install::Utils->bootstrap_client_with_solo;
+}
+
 =head1 AUTHOR
 
 Adam Jacob, C<< <adam at opscode.com> >>

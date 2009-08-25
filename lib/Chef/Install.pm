@@ -105,6 +105,22 @@ sub version {
   }
 }
 
+=head2 module 
+
+Sets/gets the current module 
+
+=cut
+
+sub module {
+  my ($self, $value) = @_;
+
+  if ($value) {
+    $self->{'module'} = $value;
+  } else {
+    $self->{'module'};
+  }
+}
+
 =head2 find_installer_object 
 
 Set the installer object, based on the platform and version.
@@ -116,8 +132,14 @@ sub find_installer_object {
 
   if (exists($self->{'platform_map'}->{$self->{'platform'}})) {
     if (exists($self->{'platform_map'}->{$self->{'platform'}}->{$self->{'version'}})) {
+      eval("use " . $self->{'platform_map'}->{$self->{'platform'}}->{$self->{'version'}});
       $self->{'module'} = eval(
         $self->{'platform_map'}->{$self->{'platform'}}->{$self->{'version'}} . "->new();"
+      );
+    } else {
+      eval("use " . $self->{'platform_map'}->{$self->{'platform'}}->{'default'});
+      $self->{'module'} = eval(
+        $self->{'platform_map'}->{$self->{'platform'}}->{'default'} . "->new();"
       );
     }
   } else {
@@ -126,6 +148,20 @@ sub find_installer_object {
   return $self;
 }
 
+=head2 go
+
+Install Chef, Configure the Client, and connect to a Chef Server.
+
+=cut
+
+sub go {
+  my $self = shift;
+
+  $self->find_installer_object unless $self->module;
+  $self->module->setup_environment();
+  $self->module->install_chef_client();
+  $self->module->bootstrap_client();
+}
 
 =head1 AUTHOR
 

@@ -1,0 +1,91 @@
+#!/usr/bin/perl
+
+use FindBin;
+use lib ( "$FindBin::Bin/../lib" );
+
+use strict;
+use warnings;
+
+use Getopt::Long;
+use Pod::Usage;
+use Chef::Install;
+
+my $man = 0;
+my $help = 0;
+my $platform;
+my $version;
+my $key;
+my $validation_client_name;
+my $server;
+
+GetOptions(
+    'p|platform=s' => \$platform,
+    'v|version=s' => \$version,
+    'k|key=s' => \$key,
+    'c|client-name=s' => \$validation_client_name,
+    's|server=s' => \$server, 
+    'help|?' => \$help,
+    'man' => \$man,
+);
+pod2usage(1) if $help;
+pod2usage(-exitstatus => 0, -verbose => 2) if $man;
+
+pod2usage(-exitstatus => 1, -msg => "You must supply -p") unless defined $platform;
+pod2usage(-exitstatus => 1, -msg => "You must supply -v") unless defined $version;
+pod2usage(-exitstatus => 1, -msg => "You must supply -k") unless defined $key;
+pod2usage(-exitstatus => 1, -msg => "You must supply -c") unless defined $validation_client_name;
+pod2usage(-exitstatus => 1, -msg => "You must supply -s") unless defined $server;
+
+my $ci = Chef::Install->new(platform => $platform, version => $version);
+$ci->go;
+
+exit 0;
+
+__END__
+
+=head1 NAME
+
+chef-install - Install a new Chef Client from Scratch
+
+=head1 SYNOPSIS
+
+chef-install [-p ubuntu] [-v 9.04] [-k /etc/chef/validation.pem] [-c opscode-validator] [-s https://api.opscode.com/organizations/opscode]
+
+  Options:
+   -p, --platform      The Platform you are on. (ubuntu, redhat, mac_os_x, etc.)
+   -v, --version       The Platform Version you are on. (9.04, 5.2, 10.5.1, etc.)
+   -k, --key           The Validation Key File
+   -c, --client-name   The Validation Client Name
+   -s, -server         The Chef Server URL
+
+=head1 OPTIONS
+
+=over 8 
+
+=item B<-p or --platform>
+
+The platform you are on.  Should be a supported Chef platform as returned by Ohai.
+
+=item B<-v or --version>
+
+The platform version.
+
+=item B<-k or --key>
+
+The validation key file.
+
+=item B<-c or --client-name>
+
+The validation client name.
+
+=item B<-s or --server>
+
+The Chef Server URL.
+
+=back
+
+=head1 DESCRIPTION
+
+B<chef-install> installs Chef from scratch.
+
+=cut

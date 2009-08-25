@@ -7,9 +7,9 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,15 +18,18 @@
 #
 
 use Test::More qw(no_plan);
-use Test::MockObject::Extends;
+use Test::MockObject;
 use FindBin;
 use Data::Dump qw(dump);
 use lib ("$FindBin::Bin/../lib");
 
-my $utils = Test::MockObject;
-my $rubygems_from_source = 0;
+my $utils                  = Test::MockObject;
+my $rubygems_from_source   = 0;
 my $add_opscode_gem_source = 0;
-my $chef_from_gems = 1;
+my $chef_from_gems         = 0;
+my $render_chef_solo_json = 0;
+my $render_chef_solo_rb = 0;
+my $bootstrap_client_with_solo = 0;
 my @run_command_args;
 
 $utils->fake_module(
@@ -35,9 +38,24 @@ $utils->fake_module(
     my $self = shift;
     push( @run_command_args, [@_] );
   },
-  'rubygems_from_source' => sub { $rubygems_from_source = 1; },
-  'add_opscode_gem_source' => sub { $add_opscode_gem_source = 1; },
-  'chef_from_gems' => sub { $chef_from_gems = 1; },
+  'rubygems_from_source' => sub {
+    $rubygems_from_source = 1;
+  },
+  'add_opscode_gem_source' => sub {
+    $add_opscode_gem_source = 1;
+  },
+  'chef_from_gems' => sub {
+    $chef_from_gems = 1;
+  },
+  'render_chef_solo_json' => sub {
+    $render_chef_solo_json = 1;
+  },
+  'render_chef_solo_rb' => sub {
+    $render_chef_solo_rb = 1;
+  },
+  'bootstrap_client_with_solo' => sub {
+    $bootstrap_client_with_solo = 1;
+  },
 );
 
 use_ok('Chef::Install::Ubuntu');
@@ -56,13 +74,20 @@ like( $run_command_args[0][1], qr/apt-get -y/, "Runs apt-get -y" );
 foreach my $pkg (qw(ruby build-essential ssl-cert)) {
   like( $run_command_args[0][1], qr/$pkg/, "Installs $pkg" );
 }
-is($rubygems_from_source, 1, "Installed rubygems from source");
-is($add_opscode_gem_source, 1, "Added opscode gem source");
+is( $rubygems_from_source,   1, "Installed rubygems from source" );
+is( $add_opscode_gem_source, 1, "Added opscode gem source" );
 
 ##
 # install_chef_client
 ##
 $ci->install_chef_client;
-is($chef_from_gems, 1, "Installed chef from rubygems");
+is( $chef_from_gems, 1, "Installed chef from rubygems" );
 
+##
+# bootstrap_client
+##
+$ci->bootstrap_client;
+is( $render_chef_solo_json, 1, "Rendered /etc/chef/solo.json");
+is( $render_chef_solo_rb, 1, "Rendered /etc/chef/solo.rb");
+is( $bootstrap_client_with_solo, 1, "Bootstrapped chef-client with chef-solo");
 

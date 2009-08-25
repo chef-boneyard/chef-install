@@ -17,9 +17,11 @@
 # limitations under the License.
 #
 
-use Test::More tests => 3;
+use Test::More tests => 8;
 use FindBin;
 use lib ("$FindBin::Bin/../lib");
+use Data::Dump qw(dump ddx);
+use Test::MockObject;
 
 BEGIN {
   use_ok('Chef::Install');
@@ -33,4 +35,18 @@ is( $ci->version,  '9.04',   'Platform version is set' );
 $ci->find_installer_object;
 
 ok( $ci->module->isa('Chef::Install::Ubuntu'), 'The current module is Chef::Install::Ubuntu');
+
+# Create our Mock Chef::Install::Method object
+my $mock_module = Test::MockObject;
+$mock_module->set_true('setup_environment', 'install_chef_client', 'bootstrap_client');
+
+$ci->module($mock_module);
+
+is($ci->module, $mock_module, "Module can be set");
+
+$ci->go;
+$mock_module->called_ok('setup_environment');
+$mock_module->called_ok('install_chef_client');
+$mock_module->called_ok('bootstrap_client');
+
 

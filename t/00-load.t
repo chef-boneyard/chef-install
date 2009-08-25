@@ -1,4 +1,4 @@
-#!perl -T
+#!perl 
 #
 # Author:: Adam Jacob (<adam@opscode.com>)
 # Copyright:: Copyright (c) 2009 Opscode, Inc.
@@ -17,6 +17,8 @@
 # limitations under the License.
 #
 
+use FindBin;
+use lib ("$FindBin::Bin/../lib");
 use Test::More tests => 1;
 
 BEGIN {

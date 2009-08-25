@@ -65,9 +65,8 @@ sub add_opscode_gem_source {
 }
 
 sub chef_from_gems {
-  run_command("command" => "gem install ohai chef");
+  Chef::Install::Utils->run_command("command" => "gem install ohai chef");
 }
-
 
 sub render_to_file {
   my $self = shift;
@@ -79,15 +78,36 @@ sub render_to_file {
   close($template);
 }
 
+sub render_chef_solo_rb {
+  my $self = shift;
+  
+  Chef::Install::Utils->render_to_file(
+    "/tmp/solo.rb",
+    <<EOH
+file_cache_path "/tmp/chef-solo"
+cookbook_path "/tmp/chef-solo/cookbooks"
+EOH
+  );
+}
+
 sub render_chef_solo_json {
   my $self = shift;
   my $server_name = shift;
 
-  render_to_file(
+  Chef::Install::Utils->render_to_file(
     "/tmp/solo.json", 
     <<EOH
 { "chef": { "server_hostname": "$server_name" }, "recipes": "chef::client" }
 EOH
+  );
+}
+
+sub bootstrap_client_with_solo {
+  my $self = shift;
+
+  Chef::Install::Utils->run_command( 
+    "command",
+    "chef-solo -c /tmp/solo.rb -j /tmp/chef.json -r http://s3.amazonaws.com/chef-solo/bootstrap-latest.tar.gz",
   );
 }
 
