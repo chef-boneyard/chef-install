@@ -113,6 +113,18 @@ like(
 Chef::Install::Utils->bootstrap_client_with_solo;
 like(
   $run_command_args[0][1],
-  qr/^chef-solo -c \/tmp\/solo\.rb -j \/tmp\/chef\.json -r http:\/\/s3\.amazonaws\.com\/chef-solo\/bootstrap-latest\.tar\.gz/,
+  qr/^chef-solo -c \/tmp\/solo\.rb -j \/tmp\/solo\.json -r http:\/\/s3\.amazonaws\.com\/chef-solo\/bootstrap-latest\.tar\.gz/,
   "Bootstraps the client with chef-solo"
 );
+
+##
+# download
+##
+my $file = Chef::Install::Utils->download("http://www.google.com/index.html", "/tmp/google-index.html");
+my $text = do { local ( @ARGV, $/ ) = $file; <> };
+like(
+  $text,
+  qr/Google/m
+);
+unlink("/tmp/google-index.html");
+

@@ -17,6 +17,7 @@
 #
 
 use Cwd;
+use Net::HTTP;
 
 package Chef::Install::Utils;
 
@@ -38,18 +39,46 @@ sub run_command {
     return $output;
 }
 
+sub download {
+  my $self = shift;
+  my $url = shift;
+  my $file = shift;
+ 
+  print "Downloading $url\n";
+  print "  to $file\n";
+
+  $url =~ /^http:\/\/(.+?)\/(.+)$/;
+  my $host = $1;
+  my $path = $2;
+  my $s = Net::HTTP->new(Host => $host) || die $@;
+  $s->write_request(GET => $path, 'User−Agent' => 'ChefInstall/0.1');
+  my($code, $mess, %h) = $s->read_response_headers;
+
+  open(my $download, ">", $file);
+  while (1) {
+    print ".";
+    my $buf;
+    my $n = $s->read_entity_body($buf, 1024);
+    die "read failed: $!" unless defined $n;
+    last unless $n;
+    print $download $buf;
+  }
+  print "\nComplete!\n";
+  close($download);
+  return $file;
+}
+
 sub rubygems_from_source {
   my $cwd = getcwd;
   chdir("/tmp");
-  Chef::Install::Utils->run_command(
-    "command",
-    "wget http://rubyforge.org/frs/download.php/57643/rubygems-1.3.4.tgz"
-  );
+  print "Downloading Rubygems\n";
+  Chef::Install::Utils->download("http://rubyforge.org/frs/download.php/57643/rubygems-1.3.4.tgz", "/tmp/rubygems-1.3.4.tgz");
   Chef::Install::Utils->run_command(
     "command",
     "tar zxf rubygems-1.3.4.tgz"
   );
   chdir("/tmp/rubygems-1.3.4");
+  print "Installing Rubygems\n";
   Chef::Install::Utils->run_command(
     "command",
     "sudo ruby setup.rb"
