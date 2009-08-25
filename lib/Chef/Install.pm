@@ -19,7 +19,6 @@
 
 package Chef::Install;
 
-use Data::Dump qw(dump ddx);
 use warnings;
 use strict;
 

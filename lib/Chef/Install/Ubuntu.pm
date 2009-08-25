@@ -18,7 +18,6 @@
 
 package Chef::Install::Ubuntu;
 
-use Data::Dump qw(dump ddx);
 use Chef::Install::Utils;
 
 use warnings;
