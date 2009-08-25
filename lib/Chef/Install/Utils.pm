@@ -107,7 +107,7 @@ sub bootstrap_client_with_solo {
 
   Chef::Install::Utils->run_command( 
     "command",
-    "chef-solo -c /tmp/solo.rb -j /tmp/chef.json -r http://s3.amazonaws.com/chef-solo/bootstrap-latest.tar.gz",
+    "chef-solo -c /tmp/solo.rb -j /tmp/solo.json -r http://s3.amazonaws.com/chef-solo/bootstrap-latest.tar.gz",
   );
 }
 

@@ -156,9 +156,13 @@ Install Chef, Configure the Client, and connect to a Chef Server.
 sub go {
   my $self = shift;
 
+  print "* Installing Chef\n";
   $self->find_installer_object unless $self->module;
+  print "* Setting up the environment, installing pre-requisites\n";
   $self->module->setup_environment();
+  print "* Installing Chef\n";
   $self->module->install_chef_client();
+  print "* Bootstrapping Chef Client\n";
   $self->module->bootstrap_client();
 }
 
