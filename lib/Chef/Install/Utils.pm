@@ -110,7 +110,7 @@ sub chef_from_gems {
     "/tmp/mixlib-authentication-1.0.0.gem" );
   my $cwd = getcwd;
   chdir("/tmp");
-  Chef::Install::Utils->run_command("command" => "gem install ./chef-0.8.0.gem ./mixlib-authentication-1.0.0.gem");
+  Chef::Install::Utils->run_command("command" => "gem install /tmp/chef-0.8.0.gem /tmp/mixlib-authentication-1.0.0.gem");
   chdir($cwd);
   1;
 }
