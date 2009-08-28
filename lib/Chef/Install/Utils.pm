@@ -68,7 +68,6 @@ sub download {
   print "Downloading $url\n";
   print "  to $file\n";
 
-  my($url, $file) = @_;
   my $request = HTTP::Request->new(GET => $url);
   my $response = $ua->request($request, $file);
 
