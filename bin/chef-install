@@ -17,6 +17,7 @@ my $version;
 my $key;
 my $validation_client_name;
 my $server;
+my @roles;
 
 GetOptions(
     'p|platform=s' => \$platform,
@@ -24,6 +25,7 @@ GetOptions(
     'k|key=s' => \$key,
     'c|client-name=s' => \$validation_client_name,
     's|server=s' => \$server, 
+    'r|roles=s' => \@roles,
     'help|?' => \$help,
     'man' => \$man,
 );
@@ -36,7 +38,7 @@ pod2usage(-exitstatus => 1, -msg => "You must supply -k") unless defined $key;
 pod2usage(-exitstatus => 1, -msg => "You must supply -c") unless defined $validation_client_name;
 pod2usage(-exitstatus => 1, -msg => "You must supply -s") unless defined $server;
 
-my $ci = Chef::Install->new(platform => $platform, version => $version);
+my $ci = Chef::Install->new(platform => $platform, version => $version, url => $server, client => $validation_client_name, key => $key, roles => $roles);
 $ci->go;
 
 exit 0;

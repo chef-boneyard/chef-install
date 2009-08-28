@@ -6,16 +6,15 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 
 package Chef::Install;
 
@@ -35,21 +34,25 @@ Version 0.01
 our $VERSION = '0.01';
 
 sub new {
-  my $class = shift;
+  my $class  = shift;
   my %params = @_;
 
   bless(
     {
-      "platform" => $params{'platform'},
-      "version"  => $params{'version'},
+      "platform"     => $params{'platform'},
+      "version"      => $params{'version'},
       "platform_map" => {
         ubuntu => {
           default => "Chef::Install::Ubuntu",
-          "9.04" => "Chef::Install::Ubuntu"
+          "9.04"  => "Chef::Install::Ubuntu"
         }
       },
-      "module" => ""
-    }, 
+      "module" => "",
+      "key"    => $params{'key'},
+      "url"    => $params{'url'},
+      "client" => $params{'client'},
+      "roles"  => $params{'roles'},
+    },
     $class
   );
 }
@@ -79,7 +82,7 @@ Sets/gets the current platform.
 =cut
 
 sub platform {
-  my ($self, $value) = @_;
+  my ( $self, $value ) = @_;
 
   if ($value) {
     $self->{'platform'} = $value;
@@ -95,12 +98,76 @@ Sets/gets the current version.
 =cut
 
 sub version {
-  my ($self, $value) = @_;
+  my ( $self, $value ) = @_;
 
   if ($value) {
     $self->{'version'} = $value;
   } else {
     $self->{'version'};
+  }
+}
+
+=head2 url 
+
+Sets/gets the current chef server url. 
+
+=cut
+
+sub url {
+  my ( $self, $value ) = @_;
+
+  if ($value) {
+    $self->{'url'} = $value;
+  } else {
+    $self->{'url'};
+  }
+}
+
+=head2 key  
+
+Sets/gets the current chef validation key. 
+
+=cut
+
+sub key {
+  my ( $self, $value ) = @_;
+
+  if ($value) {
+    $self->{'key'} = $value;
+  } else {
+    $self->{'key'};
+  }
+}
+
+=head2 client 
+
+Sets/gets the current chef validation client name. 
+
+=cut
+
+sub client {
+  my ( $self, $value ) = @_;
+
+  if ($value) {
+    $self->{'client'} = $value;
+  } else {
+    $self->{'client'};
+  }
+}
+
+=head2 roles 
+
+Sets/gets the current list of roles for this client. 
+
+=cut
+
+sub roles {
+  my ( $self, $value ) = @_;
+
+  if ($value) {
+    $self->{'roles'} = $value;
+  } else {
+    $self->{'roles'};
   }
 }
 
@@ -111,7 +178,7 @@ Sets/gets the current module
 =cut
 
 sub module {
-  my ($self, $value) = @_;
+  my ( $self, $value ) = @_;
 
   if ($value) {
     $self->{'module'} = $value;
@@ -129,17 +196,25 @@ Set the installer object, based on the platform and version.
 sub find_installer_object {
   my ($self) = @_;
 
-  if (exists($self->{'platform_map'}->{$self->{'platform'}})) {
-    if (exists($self->{'platform_map'}->{$self->{'platform'}}->{$self->{'version'}})) {
-      eval("use " . $self->{'platform_map'}->{$self->{'platform'}}->{$self->{'version'}});
-      $self->{'module'} = eval(
-        $self->{'platform_map'}->{$self->{'platform'}}->{$self->{'version'}} . "->new();"
-      );
+  if ( exists( $self->{'platform_map'}->{ $self->{'platform'} } ) ) {
+    if (
+      exists(
+        $self->{'platform_map'}->{ $self->{'platform'} }
+          ->{ $self->{'version'} }
+      )
+      ) {
+      eval( "use "
+          . $self->{'platform_map'}->{ $self->{'platform'} }
+          ->{ $self->{'version'} } );
+      $self->{'module'} =
+        eval( $self->{'platform_map'}->{ $self->{'platform'} }
+          ->{ $self->{'version'} } . "->new();" );
     } else {
-      eval("use " . $self->{'platform_map'}->{$self->{'platform'}}->{'default'});
-      $self->{'module'} = eval(
-        $self->{'platform_map'}->{$self->{'platform'}}->{'default'} . "->new();"
-      );
+      eval( "use "
+          . $self->{'platform_map'}->{ $self->{'platform'} }->{'default'} );
+      $self->{'module'} =
+        eval( $self->{'platform_map'}->{ $self->{'platform'} }->{'default'}
+          . "->new();" );
     }
   } else {
     die "Unknown platform $self->{'platform'} \n";
@@ -163,7 +238,21 @@ sub go {
   print "* Installing Chef\n";
   $self->module->install_chef_client();
   print "* Bootstrapping Chef Client\n";
-  $self->module->bootstrap_client();
+  $self->module->bootstrap_client( $self->url, $self->key, $self->client );
+  print "* First Chef Client Run\n";
+  $self->module->run_chef;
+  print "* Adding roles\n";
+  foreach my $role ( $self->roles ) {
+    Chef::Install::Utils->run_command( "command" => "env OPSCODE_USER="
+        . $self->client
+        . " OPSCODE_KEY="
+        . $self->key
+        . " knife add_node_role --node="
+        . chomp(`ohai fqdn`)
+        . " --role=$role" );
+  }
+  print "* Final chef run\n";
+  $self->module->run_chef;
 }
 
 =head1 AUTHOR
@@ -222,4 +311,4 @@ under the same terms as Perl itself.
 
 =cut
 
-1; # End of Chef::Install
+1;    # End of Chef::Install

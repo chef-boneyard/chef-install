@@ -58,9 +58,36 @@ sub install_chef_client {
 }
 
 sub bootstrap_client {
-  Chef::Install::Utils->render_chef_solo_json;
-  Chef::Install::Utils->render_chef_solo_rb;
-  Chef::Install::Utils->bootstrap_client_with_solo;
+  my $self = shift;
+  my $url = shift;
+  my $key = shift;
+  my $client = shift;
+
+  Chef::Install::Utils->render_to_file(
+    "/etc/chef/client.rb",
+    <<EOH
+log_level        :info
+log_location     STDOUT
+file_store_path  "/var/chef/file_store"
+file_cache_path  "/var/chef/cache"
+ssl_verify_mode  :verify_none
+chef_server_url  "$url"
+registration_url "$url"
+openid_url       "$url"
+template_url     "$url"
+remotefile_url   "$url"
+search_url       "$url"
+role_url         "$url"
+client_url       "$url"
+
+validation_key "$key"
+validation_client_name "$client"
+EOH
+  );
+}
+
+sub run_chef {
+  Chef::Install::Utils->run_chef;
 }
 
 =head1 AUTHOR

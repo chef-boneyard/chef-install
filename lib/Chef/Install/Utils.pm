@@ -162,4 +162,14 @@ sub bootstrap_client_with_solo {
   );
 }
 
+sub run_chef {
+  my $self = shift;
+  Chef::Install::Utils->run_command(
+    "command",
+    "chef-client"
+  );
+}
+
 1;
+
+
