@@ -17,7 +17,7 @@
 #
 
 use Cwd;
-use Net::HTTP;
+use LWP::UserAgent;
 use Data::Dumper;
 
 package Chef::Install::Utils;
@@ -39,6 +39,21 @@ sub run_command {
   }
   close(COMMAND);
 
+  my $kid_status = 0;
+  if ( $? == -1 ) {
+    die "Failed to fork $p{'command'}: $!";
+  } elsif ( $? & 127 ) {
+    printf "$p{'command'} died with signal %d, %s coredump\n",
+    ($? & 127),  ($? & 128) ? 'with' : 'without';
+    exit 1000;
+  } else {
+    $kid_status = $? >> 8;
+  }
+
+  if ($kid_status != 0) {
+    die "Command $p{'command'} exited with $kid_status!";
+  }
+  
   return $output;
 }
 
@@ -47,27 +62,17 @@ sub download {
   my $url  = shift;
   my $file = shift;
 
+  my $ua = LWP::UserAgent->new;
+  $ua->agent("chefinstaller/1.0");
+
   print "Downloading $url\n";
   print "  to $file\n";
 
-  $url =~ /^http:\/\/(.+?)\/(.+)$/;
-  my $host = $1;
-  my $path = $2;
-  my $s    = Net::HTTP->new( Host => $host ) || die $@;
-  $s->write_request( GET => $path, 'User−Agent' => 'ChefInstall/0.1' );
-  my ( $code, $mess, %h ) = $s->read_response_headers;
-  open( my $download, ">", $file );
-  while (1) {
-    print ".";
-    my $buf;
-    my $n = $s->read_entity_body( $buf, 1024 );
-    die "read failed: $!" unless defined $n;
-    last                  unless $n;
-    print $download $buf;
-  }
-  print "\nComplete!\n";
-  close($download);
-  return $file;
+  my($url, $file) = @_;
+  my $request = HTTP::Request->new(GET => $url);
+  my $response = $ua->request($request, $file);
+
+  $response->code;
 }
 
 sub rubygems_from_source {
