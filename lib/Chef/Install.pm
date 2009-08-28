@@ -242,7 +242,7 @@ sub go {
   print "* First Chef Client Run\n";
   $self->module->run_chef;
   print "* Adding roles\n";
-  foreach my $role ( $self->roles ) {
+  foreach my $role ( @{$self->roles} ) {
     Chef::Install::Utils->run_command( "command" => "env OPSCODE_USER="
         . $self->client
         . " OPSCODE_KEY="
