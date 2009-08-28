@@ -248,7 +248,7 @@ sub go {
         . " OPSCODE_KEY="
         . $self->key
         . " knife add_node_role --node="
-        . chomp(`ohai fqdn`)
+        . `ohai fqdn`
         . " --role=$role" );
   }
   print "* Final chef run\n";
