@@ -242,13 +242,15 @@ sub go {
   print "* First Chef Client Run\n";
   $self->module->run_chef;
   print "* Adding roles\n";
+  my $node_name = `ohai fqdn`;
+  chomp($node_name);
   foreach my $role ( @{$self->roles} ) {
     Chef::Install::Utils->run_command( "command" => "env OPSCODE_USER="
         . $self->client
         . " OPSCODE_KEY="
         . $self->key
         . " knife add_node_role --node="
-        . `ohai fqdn`
+        . $node_name 
         . " --role=$role" );
   }
   print "* Final chef run\n";
