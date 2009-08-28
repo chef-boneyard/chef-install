@@ -43,17 +43,17 @@ sub run_command {
   if ( $? == -1 ) {
     die "Failed to fork $p{'command'}: $!";
   } elsif ( $? & 127 ) {
-    printf "$p{'command'} died with signal %d, %s coredump\n",
-    ($? & 127),  ($? & 128) ? 'with' : 'without';
+    printf "$p{'command'} died with signal %d, %s coredump\n", ( $? & 127 ),
+      ( $? & 128 ) ? 'with' : 'without';
     exit 1000;
   } else {
     $kid_status = $? >> 8;
   }
 
-  if ($kid_status != 0) {
+  if ( $kid_status != 0 ) {
     die "Command $p{'command'} exited with $kid_status!";
   }
-  
+
   return $output;
 }
 
@@ -68,10 +68,12 @@ sub download {
   print "Downloading $url\n";
   print "  to $file\n";
 
-  my $request = HTTP::Request->new(GET => $url);
-  my $response = $ua->request($request, $file);
+  my $request = HTTP::Request->new( GET => $url );
+  my $response = $ua->request( $request, $file );
 
-  $response->code;
+  unless ($response->code == 200) {
+    die "Error downloading file " . $response->code;
+  }
 }
 
 sub rubygems_from_source {
@@ -110,7 +112,9 @@ sub chef_from_gems {
     "/tmp/mixlib-authentication-1.0.0.gem" );
   my $cwd = getcwd;
   chdir("/tmp");
-  Chef::Install::Utils->run_command("command" => "gem install /tmp/chef-0.8.0.gem /tmp/mixlib-authentication-1.0.0.gem");
+  Chef::Install::Utils->run_command( "command" =>
+      "gem install /tmp/chef-0.8.0.gem /tmp/mixlib-authentication-1.0.0.gem"
+  );
   chdir($cwd);
   1;
 }
